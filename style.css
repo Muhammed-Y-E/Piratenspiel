@@ -17,7 +17,7 @@
     border: 5px solid black;
     width: 250px;
     object-fit: cover;
-    object-position: 0px;
+    object-position: 0;
 }
 
 .button {
