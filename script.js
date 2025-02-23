@@ -3,6 +3,7 @@ let state = 'IDLE';
 let left = 300;
 let leftArrow = false;
 let rightArrow = false;
+let attacking = false; // Gibt an, ob der Angriff gerade stattfindet
 
 
 setInterval(moveCharacter, 75);
@@ -24,6 +25,9 @@ function checkKey(e) {
         rightArrow = true;
         setState('WALK');
     }
+    if (e.keyCode == '68') { // 'd' taste 
+        attacking = true;
+    }  
 }
 
 
@@ -40,7 +44,6 @@ function unCheckKey(e) {
 
 
 
-
 function updateGame() {
     currentBackground.style.objectPosition = `${-left}px`;
     if(leftArrow) {
@@ -49,7 +52,11 @@ function updateGame() {
     if(rightArrow) {
         left += 5;
     }
-    if(leftArrow || rightArrow) {
+
+    if(attacking) {
+        setState('ATTACK');
+    }
+    else if(leftArrow || rightArrow) {
         setState('WALK');
     } else {
         setState('IDLE');
@@ -69,7 +76,8 @@ function moveCharacter() {
   
 
     if (frame == 7) {
-        frame = 0;
+       attacking = false;
+       frame = 0; 
     }
 }
 
