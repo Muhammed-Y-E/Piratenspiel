@@ -28,8 +28,21 @@ function checkKey(e) {
        setState('WALK');
     } 
     if (e.keyCode == '68'){ // 'd' Taste 
-        attacking = true;
+        startAttack();
     }
+}
+
+function startAttack() {
+    attacking = true;
+    // Bullet anzeigen
+
+    const bullet = document.createElement('img'); // <img>
+    bullet.classList.add('bullet'); // <img class="bullet">
+    // <img class="enemy" src="img/bullet.png">
+    bullet.src = 'img/bullet.png'; 
+
+    document.body.appendChild(bullet);
+
 }
 
 function unCheckKey(e) {
@@ -44,8 +57,8 @@ function unCheckKey(e) {
 
 function updateGame() {
     currentBackground.style.left = `${-left}px`;
-    currentBackground2.style.left = `${-(left - 1453)}px`;
-    currentBackground3.style.left = `${-(left - 1453 * 2)}px`;
+    currentBackground2.style.left = `${-(left - 1721)}px`;
+    currentBackground3.style.left = `${-(left - 1721 * 2)}px`;
 
     // Update enemy positions to stay fixed on background
     enemies.forEach(enemy => {
