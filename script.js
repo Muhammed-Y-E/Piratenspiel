@@ -6,12 +6,13 @@ let rightArrow = false;
 let attacking = false;
 const enemies = []; // Array
 const bullets = []; // Array
-const enemyCount = 3;
+const enemyCount = 8;
 
 
 setInterval(moveCharacterAndEnemies,75);
 setInterval(updateGame, 1000 / 60);
 setInterval(checkCollisions, 1000 / 60);
+setInterval(checkCharacterCollision, 1000 / 60);
 document.onkeydown = checkKey;
 document.onkeyup = unCheckKey;
 createEnemies();
@@ -63,53 +64,65 @@ function unCheckKey(e) {
 }
 
 function updateGame() {
-    currentBackground.style.left = `${-left}px`;
-    currentBackground2.style.left = `${-(left - 1465)}px`;
-    currentBackground3.style.left = `${-(left - 1465 * 2)}px`;
+    if (state !== 'DIE') {
+        currentBackground.style.left = `${-left}px`;
+        currentBackground2.style.left = `${-(left - 1465)}px`;
+        currentBackground3.style.left = `${-(left - 1465 * 2)}px`;
 
-    // Update enemy positions to stay fixed on background
-    enemies.forEach(enemy => {
-        enemy.initialX -= 0.5;
-        enemy.element.style.left = `${enemy.initialX - left}px`;
-    });
+        // Update enemy positions to stay fixed on background
+        enemies.forEach(enemy => {
+            if(!enemy.hit) {
+                enemy.initialX -= 0.5;
+            }
+            enemy.element.style.left = `${enemy.initialX - left}px`;
+        });
 
-    bullets.forEach(bullet => {
-        bullet.initialX += 15;
-        bullet.element.style.left = `${bullet.initialX}px`;
-    });
+        bullets.forEach(bullet => {
+            bullet.initialX += 15;
+            bullet.element.style.left = `${bullet.initialX}px`;
+        });
 
 
-    if(leftArrow && left > 0) {
-        left -= 5;
-    }
-    if(rightArrow && left < 2740) {
-        left += 5;
-    }
+        if(leftArrow && left > 0) {
+            left -= 5;
+        }
+        if(rightArrow && left < 2740) {
+            left += 5;
+        }
 
-    if(attacking) {
-        setState('ATTACK');
-    } else if(leftArrow || rightArrow) {
-        setState('WALK');
-    } else {
-        setState('IDLE');
+        if(attacking) {
+            setState('ATTACK');
+        } else if(leftArrow || rightArrow) {
+            setState('WALK');
+        } else {
+            setState('IDLE');
+        }
     }
 }
 
 function moveCharacterAndEnemies(){
-    updateEnemies();
-    pirate.src = `img/2/2_entity_000_${state}_00${frame}.png`;
-    frame++;
-    if(leftArrow) {
-        pirate.style.transform = "scaleX(-1)";
+    if(state !== 'DIE') {
+        updateEnemies();
     }
 
-    if(rightArrow) {
-        pirate.style.transform = "scaleX(1)";
-    }
+    if (state === 'DIE' && frame < 7) { // Führe die Sterbeanimation einmal aus
+        pirate.src = `img/2/2_entity_000_DIE_00${frame}.png`;
+        frame++;
+    } else if (state !== 'DIE') { // Andere Zustände
+        pirate.src = `img/2/2_entity_000_${state}_00${frame}.png`;
+        frame++;
+        if(leftArrow) {
+            pirate.style.transform = "scaleX(-1)";
+        }
 
-    if(frame == 7) {
-        attacking = false;
-        frame = 0;
+        if(rightArrow) {
+            pirate.style.transform = "scaleX(1)";
+        }
+
+        if(frame == 7) {
+            attacking = false;
+            frame = 0;
+        }
     }
 }
 
@@ -148,7 +161,7 @@ function checkCollisions() {
                 ) {
                     // Treffer
                     enemy.hit = true; // Gegner als getroffen markieren
-                    enemy.frame = 0; // Animation von vorne beginnen
+                    enemy.frame = 5; // Animation von vorne beginnen
 
                     // Kugel entfernen
                     bullet.element.remove(); // Entferne das Kugel-Element aus dem DOM
@@ -195,4 +208,36 @@ function setState(newState) {
         frame = 0;
         state = newState;
     }  
+}
+
+
+function checkCharacterCollision() {
+    if(state !== 'DIE') {
+        const pirateRect = pirate.getBoundingClientRect();
+
+        enemies.forEach(enemy => {
+            const enemyRect = enemy.element.getBoundingClientRect();
+
+            // Kollision zwischen Charakter und Gegner überprüfen
+            if (
+                pirateRect.left < enemyRect.right &&
+                pirateRect.right > enemyRect.left &&
+                pirateRect.top < enemyRect.bottom &&
+                pirateRect.bottom > enemyRect.top &&
+                !enemy.hit
+            ) {
+                // Kollision erkannt
+                setState('DIE'); // Setze den Zustand des Charakters auf 'DIE'
+                
+                // Bewegung des Charakters und der Gegner stoppen
+                leftArrow = false;
+                rightArrow = false;
+
+                // Gegnerbewegung stoppen
+                enemies.forEach(enemy => {
+                    enemy.movable = false; // Füge eine Eigenschaft hinzu, um die Bewegung zu kontrollieren
+                });
+            }
+        });
+    }
 }
