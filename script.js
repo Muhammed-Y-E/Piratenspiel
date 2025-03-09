@@ -7,9 +7,16 @@ let attacking = false;
 const enemies = []; // Array
 const bullets = []; // Array
 const enemyCount = 8;
+let backgroundMusic = new Audio('sounds/background_music.mp3');
+backgroundMusic.loop = true;
+backgroundMusic.volume = 0.1;
+let hit = new Audio('sounds/hit.MP3');
+let shot = new Audio('sounds/shot.MP3');
+let walky = new Audio('sounds/walky.MP3');
+walky.loop = true;
 
 
-setInterval(moveCharacterAndEnemies,75);
+setInterval(moveCharacterAndEnemies, 75);
 setInterval(updateGame, 1000 / 60);
 setInterval(checkCollisions, 1000 / 60);
 setInterval(checkCharacterCollision, 1000 / 60);
@@ -18,20 +25,25 @@ document.onkeyup = unCheckKey;
 createEnemies();
 
 function checkKey(e) {
-    e = e || window.event;
+    if (state !== 'DIE') {
+        e = e || window.event;
 
-    if (e.keyCode == '37') {
-       // left arrow
-       leftArrow = true;
-       setState('WALK');
-    }
-    else if (e.keyCode == '39') {
-       // right arrow
-       rightArrow = true;
-       setState('WALK');
-    } 
-    if (e.keyCode == '68'){ // 'd' Taste 
-        startAttack();
+        if (backgroundMusic.paused) {
+            // backgroundMusic.play(); // Bitte einkommentieren, wenn du Musik willst.
+        }
+        if (e.keyCode == '37') {
+            // left arrow
+            leftArrow = true;
+            setState('WALK');
+        }
+        else if (e.keyCode == '39') {
+            // right arrow
+            rightArrow = true;
+            setState('WALK');
+        }
+        if (e.keyCode == '68') { // 'd' Taste 
+            startAttack();
+        }
     }
 }
 
@@ -39,11 +51,13 @@ function startAttack() {
     attacking = true;
     // Bullet anzeigen
 
-    setTimeout(function() {
+    setTimeout(function () {
+        shot.currentTime = 0;
+        shot.play();
         const bullet = document.createElement('img'); // <img>
         bullet.classList.add('bullet'); // <img class="bullet">
         // <img class="enemy" src="img/bullet.png">
-        bullet.src = 'img/bullet.png'; 
+        bullet.src = 'img/bullet.png';
         document.body.appendChild(bullet);
 
         bullets.push({
@@ -66,12 +80,12 @@ function unCheckKey(e) {
 function updateGame() {
     if (state !== 'DIE') {
         currentBackground.style.left = `${-left}px`;
-        currentBackground2.style.left = `${-(left - 1465)}px`;
-        currentBackground3.style.left = `${-(left - 1465 * 2)}px`;
+        currentBackground2.style.left = `${-(left - currentBackground.width)}px`;
+        currentBackground3.style.left = `${-(left - currentBackground.width * 2)}px`;
 
         // Update enemy positions to stay fixed on background
         enemies.forEach(enemy => {
-            if(!enemy.hit) {
+            if (!enemy.hit) {
                 enemy.initialX -= 0.5;
             }
             enemy.element.style.left = `${enemy.initialX - left}px`;
@@ -83,16 +97,23 @@ function updateGame() {
         });
 
 
-        if(leftArrow && left > 0) {
+        if (leftArrow && left > 0) {
             left -= 5;
         }
-        if(rightArrow && left < 2740) {
+        if (rightArrow && left < 2740) {
             left += 5;
         }
 
-        if(attacking) {
+
+        if (leftArrow || rightArrow) {
+            walky.play();
+        } else {
+            walky.pause();
+        }
+
+        if (attacking) {
             setState('ATTACK');
-        } else if(leftArrow || rightArrow) {
+        } else if (leftArrow || rightArrow) {
             setState('WALK');
         } else {
             setState('IDLE');
@@ -100,8 +121,8 @@ function updateGame() {
     }
 }
 
-function moveCharacterAndEnemies(){
-    if(state !== 'DIE') {
+function moveCharacterAndEnemies() {
+    if (state !== 'DIE') {
         updateEnemies();
     }
 
@@ -111,15 +132,15 @@ function moveCharacterAndEnemies(){
     } else if (state !== 'DIE') { // Andere Zustände
         pirate.src = `img/2/2_entity_000_${state}_00${frame}.png`;
         frame++;
-        if(leftArrow) {
+        if (leftArrow) {
             pirate.style.transform = "scaleX(-1)";
         }
 
-        if(rightArrow) {
+        if (rightArrow) {
             pirate.style.transform = "scaleX(1)";
         }
 
-        if(frame == 7) {
+        if (frame == 7) {
             attacking = false;
             frame = 0;
         }
@@ -132,7 +153,7 @@ function createEnemies() {
         const enemy = document.createElement('img'); // <img>
         enemy.classList.add('enemy'); // <img class="enemy">
         // <img class="enemy" src="img/Minotaur_01/Minotaur_01_Walking_000.png">
-        enemy.src = 'img/Minotaur_01/Minotaur_01_Walking_000.png'; 
+        enemy.src = 'img/Minotaur_01/Minotaur_01_Walking_000.png';
 
         document.getElementById('enemiesContainer').appendChild(enemy);
 
@@ -160,6 +181,8 @@ function checkCollisions() {
                     bulletRect.bottom > enemyRect.top
                 ) {
                     // Treffer
+                    hit.currentTime = 0;
+                    hit.play();
                     enemy.hit = true; // Gegner als getroffen markieren
                     enemy.frame = 5; // Animation von vorne beginnen
 
@@ -204,15 +227,15 @@ function updateEnemies() {
 
 
 function setState(newState) {
-    if(state !== newState) {
+    if (state !== newState) {
         frame = 0;
         state = newState;
-    }  
+    }
 }
 
 
 function checkCharacterCollision() {
-    if(state !== 'DIE') {
+    if (state !== 'DIE') {
         const pirateRect = pirate.getBoundingClientRect();
 
         enemies.forEach(enemy => {
@@ -228,10 +251,13 @@ function checkCharacterCollision() {
             ) {
                 // Kollision erkannt
                 setState('DIE'); // Setze den Zustand des Charakters auf 'DIE'
-                
+
                 // Bewegung des Charakters und der Gegner stoppen
                 leftArrow = false;
                 rightArrow = false;
+                walky.pause();
+                backgroundMusic.pause();
+                //Hier könnte man nen Game-Over sound Abspielen. Video 22, Piratenspiel, Young Coders
 
                 // Gegnerbewegung stoppen
                 enemies.forEach(enemy => {
