@@ -5,6 +5,7 @@ let leftArrow = false;
 let rightArrow = false;
 let attacking = false;
 const enemies = []; // Array
+const bullets = []; // Array
 const enemyCount = 3;
 
 
@@ -35,13 +36,22 @@ function checkKey(e) {
 function startAttack() {
     attacking = true;
     // Bullet anzeigen
-
+    
+    setTimeout(function(){
     const bullet = document.createElement('img'); // <img>
     bullet.classList.add('bullet'); // <img class="bullet">
     // <img class="enemy" src="img/bullet.png">
     bullet.src = 'img/bullet.png'; 
 
     document.body.appendChild(bullet);
+
+    bullets.push({
+        element: bullet,
+        initialX: 295
+    });
+
+    
+   }, 0);
 
 }
 
@@ -57,8 +67,8 @@ function unCheckKey(e) {
 
 function updateGame() {
     currentBackground.style.left = `${-left}px`;
-    currentBackground2.style.left = `${-(left - 1721)}px`;
-    currentBackground3.style.left = `${-(left - 1721 * 2)}px`;
+    currentBackground2.style.left = `${-(left - 1465)}px`;
+    currentBackground3.style.left = `${-(left - 1465 * 2)}px`;
 
     // Update enemy positions to stay fixed on background
     enemies.forEach(enemy => {
@@ -67,10 +77,15 @@ function updateGame() {
     });
 
 
+    bullets.forEach(bullet => {
+        bullet.initialX += 15;
+        bullet.element.style.left = `${bullet.initialX}px`;
+    });
+
     if(leftArrow && left > 0) {
         left -= 5;
     }
-    if(rightArrow && left < 3235) {
+    if(rightArrow && left < 2740) {
         left += 5;
     }
 
